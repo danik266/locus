@@ -1,0 +1,7 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { defaults, recommend, makeTasks, programs } from '../lib/admissions.ts';
+test('interest changes all recommendations and always yields three programs',()=>{for(const interest of ['Технологии','Дизайн','Бизнес']){const results=recommend({...defaults,interest});assert.equal(results.length,3);assert.ok(results.every(p=>p.interest===interest));}});
+test('country and budget affect ranking and expose unmet constraints',()=>{assert.equal(recommend({...defaults,country:'Нидерланды',budget:20000})[0].country,'Нидерланды');const low=recommend({...defaults,budget:1000});assert.ok(low.every(p=>p.gaps.some(g=>g.includes('Бюджет ниже'))));assert.ok(low.every(p=>!p.reasons.includes('Стоимость обучения укладывается в бюджет')));});
+test('English and budget gaps create preparation tasks, and disappear when requirements are met',()=>{const p=programs.find(p=>p.id==='ai-nl')!;const low=makeTasks({...defaults,budget:5000,english:'5'},p);assert.ok(low.some(t=>t.id.startsWith('english')));assert.ok(low.some(t=>t.id.startsWith('fund')));const ready=makeTasks({...defaults,budget:20000,english:'7'},p);assert.ok(!ready.some(t=>t.id.startsWith('english')));assert.ok(!ready.some(t=>t.id.startsWith('fund')));});
+test('application task keys change with program and intake year',()=>{const p=programs[0];assert.notEqual(makeTasks(defaults,p).at(-1)?.id,makeTasks({...defaults,year:'2028'},p).at(-1)?.id);assert.notEqual(makeTasks(defaults,p).at(-1)?.id,makeTasks(defaults,programs[1]).at(-1)?.id);});
