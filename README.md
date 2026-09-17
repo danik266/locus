@@ -1,4 +1,4 @@
-# Далее — персональный маршрут поступления
+# Continue — персональный маршрут поступления
 
 Рабочий прототип для LOCUS Startup Hackathon 2026, кейс 02. От анкеты до объяснимого подбора, сравнения и плана действий.
 
@@ -35,3 +35,11 @@ React 19, TypeScript, vinext/Vite, CSS. `app/page.tsx` — клиентские 
 ## Ограничения и следующий этап
 
 Это каркас, не готовый финальный сабмит. До подачи нужны реальные проверенные источники или расширенное обозначение демосценария, визуальная проверка на устройствах, доступный GitHub с историей, демо-видео до 3 минут, презентация до 8 слайдов и описание ролей команды (заполняет капитан). Название рабочее. Реальные заявления не отправляются. Поступление не гарантируется. Локальное хранение можно потерять при очистке браузера.
+
+## Languages
+
+Complete English, Russian and Kazakh interfaces (EN / RU / KK). English is the default. The header switcher persists a language-only `continue_locale` cookie for one year. The server uses it for document language, metadata and initial rendering. Changing language does not replace profile values, selected programs or completed tasks. The original `dalee-v1` storage key is retained for backward compatibility.
+
+`lib/messages.ts` contains translations; `lib/i18n.ts` handles locale validation, currency and dynamic sentences. `app/language.tsx` localizes React text and accessibility labels without DOM mutation; form option values and event handlers remain canonical. Add new languages with complete dictionaries and coverage tests. No external translation API is used.
+
+12 automated tests cover recommendations, preparation tasks, dictionary coverage, dynamic translations, locale validation and name preservation. Visual browser QA remains pending because no browser was available in the development session.
