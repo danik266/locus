@@ -191,20 +191,20 @@ export default function Home(){
      <button className={view==='compare'?'active':''} onClick={()=>go('compare')}>Сравнение{compared.length>0&&<span className="nav-count">{compared.length}</span>}</button>
      <button className={view==='plan'?'active':''} onClick={()=>go('plan')}>Мой план</button>
     </>}
-    <button className="nav-mobile-primary" onClick={begin}>{hasProfile?'Изменить анкету':'Начать маршрут'} <Arrow/></button>
+    <button className="nav-mobile-primary" onClick={begin}>{hasProfile?t('Изменить анкету'):t('Начать маршрут')} <Arrow/></button>
    </nav>
    <div className="nav-actions">
     <LanguagePicker/>
-    <button className="button small nav-primary" onClick={begin}>{hasProfile?'Моя анкета':'Начать'}<Arrow/></button>
+    <button className="button small nav-primary" onClick={begin}>{hasProfile?t('Моя анкета'):t('Начать')}<Arrow/></button>
     {user?<details className="account-menu">
-     <summary aria-label={`Аккаунт: ${user.email}`} title={user.email}><span className="account-avatar">{(user.name||user.email).charAt(0).toUpperCase()}</span><span className="account-chevron" aria-hidden="true">⌄</span></summary>
+     <summary aria-label={`${t('Аккаунт')}: ${user.email}`} title={user.email}><span className="account-avatar">{(user.name||user.email).charAt(0).toUpperCase()}</span><span className="account-chevron" aria-hidden="true">⌄</span></summary>
      <div className="account-popover">
-      <p className="account-popover-label">Вы вошли как</p><strong className="account-email">{user.email}</strong>
+      <p className="account-popover-label">{t('Вы вошли как')}</p><strong className="account-email">{user.email}</strong>
       <div className="account-popover-divider"/>
-      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');if(hasProfile)go(selected?'plan':'results');else begin()}}>Мой маршрут <Arrow/></button>
-      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');void signOut()}}>Выйти</button>
+      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');if(hasProfile)go(selected?'plan':'results');else begin()}}>{t('Мой маршрут')} <Arrow/></button>
+      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');void signOut()}}>{t('Выйти')}</button>
      </div>
-    </details>:<button className="nav-login" onClick={()=>{pendingStart.current=false;setShowLogin(true)}}>Войти</button>}
+    </details>:<button className="nav-login" onClick={()=>{pendingStart.current=false;setShowLogin(true)}}>{t('Войти')}</button>}
     <button className="menu-button" aria-label={menu?'Закрыть меню':'Открыть меню'} aria-controls="site-navigation" aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?'×':'☰'}</button>
    </div>
   </div>
