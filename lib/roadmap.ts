@@ -4,7 +4,8 @@ import { budgetComparison, formatTuition, type Profile } from './admissions.ts';
 export const roadmapIds = ['eligibility','academics','english','exams','finance','documents','application','after'] as const;
 export type RoadmapId = typeof roadmapIds[number];
 export type RoadmapStage = {id:RoadmapId;title:string;when:string;summary:string;actions:string[];checkpoint:string;sourceLabel:string;sourceUrl:string};
-export type AiRoadmap = {intro:string;priority:string;stages:{id:RoadmapId;focus:string;extraActions:string[];checkpoint:string}[];outro:string};
+export type AiRoadmapStage = {id:RoadmapId;focus:string;extraActions:string[];checkpoint:string};
+export type AiRoadmap = {intro:string;priority:string;stages:AiRoadmapStage[];outro:string};
 
 export function buildRoadmap(profile:Profile,program:Program):RoadmapStage[]{
  const deadline=program.deadline?.intake===profile.year?program.deadline:null;
@@ -68,9 +69,22 @@ export function roadmapInput(profile:Profile,program:Program,stages:RoadmapStage
 export function parseAiRoadmap(value:unknown):AiRoadmap|null{
  if(!value||typeof value!=='object')return null;
  const data=value as Record<string,unknown>;
- const line=(v:unknown,max:number)=>typeof v==='string'&&v.trim().length>=12&&v.length<=max&&!/[<>]/.test(v);
- if(!line(data.intro,650)||!line(data.priority,450)||!line(data.outro,450)||!Array.isArray(data.stages)||data.stages.length!==roadmapIds.length)return null;
+ const clean=(v:unknown,fallback='')=>typeof v==='string'?v.replace(/[<>]/g,'').trim():fallback;
+ const intro=clean(data.intro);
+ const priority=clean(data.priority);
+ const outro=clean(data.outro,'Обязательно проверяйте актуальные правила на официальном сайте вуза перед подачей.');
+ if(!intro || !Array.isArray(data.stages))return null;
+
+ const stages: AiRoadmapStage[] = [];
  const rows=data.stages as Record<string,unknown>[];
- if(!rows.every((row,i)=>row&&typeof row==='object'&&row.id===roadmapIds[i]&&line(row.focus,480)&&line(row.checkpoint,300)&&Array.isArray(row.extraActions)&&row.extraActions.length>=1&&row.extraActions.length<=2&&row.extraActions.every(action=>line(action,260))))return null;
- return data as AiRoadmap;
+ for(let i=0; i<roadmapIds.length; i++){
+  const id=roadmapIds[i];
+  const row=rows.find(r=>r&&r.id===id)||rows[i]||{};
+  const focus=clean(row.focus, `Подготовьтесь к этапу «${id}» по официальным требованиям.`);
+  const checkpoint=clean(row.checkpoint, 'Результат этапа зафиксирован и проверен.');
+  const rawActions=Array.isArray(row.extraActions)?row.extraActions:[];
+  const extraActions=rawActions.map(a=>clean(a)).filter(a=>a.length>=5).slice(0, 3);
+  stages.push({id, focus, checkpoint, extraActions: extraActions.length ? extraActions : ['Сверьте актуальные условия на портале приёма.']});
+ }
+ return {intro, priority: priority || 'Составьте график выполнения ключевых шагов', outro, stages};
 }
