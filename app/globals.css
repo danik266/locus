@@ -186,3 +186,59 @@
 .modal-error{color:#b04040;font-size:11px;margin:0 0 12px;padding:10px 12px;background:#fdf0ef;border-radius:8px}
 .modal-footer-actions{display:flex;justify-content:space-between;margin-top:16px;gap:10px}
 .modal-footer-actions .text-button{font-size:11px}
+
+/* Navigation: compact destinations, with account actions in a separate menu. */
+.header{height:82px}
+.nav{gap:22px;justify-content:flex-start}
+.logo-button{flex:none}
+.nav-links{gap:3px;margin-left:auto;white-space:nowrap;flex:none}
+.nav-links button,.nav-links a{display:inline-flex;align-items:center;gap:2px;min-height:42px;padding:9px 11px;border-radius:9px;line-height:1.2;white-space:nowrap;transition:background .2s,color .2s}
+.nav-links button:hover,.nav-links a:hover,.nav-links .active{background:var(--wash);color:var(--plum)}
+.nav-count{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;margin-left:5px;padding:0 5px;font-size:11px}
+.nav-actions{gap:11px;flex:none;margin-left:8px}
+.nav-actions .nav-primary{min-height:43px;padding:9px 15px;gap:12px;font-size:12px}
+.nav-login{min-height:42px;padding:9px 11px;border:0;background:transparent;color:var(--ink);font-size:12px;font-weight:750;white-space:nowrap}
+.nav-login:hover{color:var(--plum)}
+.nav-mobile-primary{display:none!important}
+.account-menu{position:relative;flex:none}
+.account-menu summary{list-style:none;display:flex;align-items:center;gap:5px;min-height:44px;padding:0 2px 0 7px;cursor:pointer}
+.account-menu summary::-webkit-details-marker{display:none}
+.account-avatar{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--wash);color:var(--plum);font-weight:800;font-size:14px;line-height:1}
+.account-chevron{font-size:15px;color:var(--muted);line-height:1;transition:transform .2s}
+.account-menu[open] .account-chevron{transform:rotate(180deg)}
+.account-popover{position:absolute;right:0;top:calc(100% + 10px);z-index:60;width:235px;padding:15px;background:var(--surface);border:1px solid var(--line);border-radius:15px;box-shadow:0 18px 45px #392e4426}
+.account-popover-label{font-size:10px;color:var(--muted);line-height:1.3}
+.account-email{display:block;margin-top:4px;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.account-popover-divider{height:1px;margin:12px 0 5px;background:var(--line)}
+.account-popover button{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:42px;padding:8px 9px;text-align:left;border:0;border-radius:8px;background:transparent;font-size:12px;font-weight:700}
+.account-popover button:hover{background:var(--wash);color:var(--plum)}
+@media(max-width:1260px){
+ .nav-links{display:none}
+ .nav-links.open{display:flex;flex-direction:column;align-items:stretch;position:absolute;top:100%;left:0;right:0;z-index:40;margin:0;padding:15px max(24px,calc((100vw - 1240px)/2));gap:3px;background:var(--bg);border-bottom:1px solid var(--line);box-shadow:0 20px 28px #392e4414;white-space:normal}
+ .nav-links.open button,.nav-links.open a{display:flex;width:100%;min-height:43px;text-align:left;padding:11px 13px;font-size:13px}
+ .nav{justify-content:space-between}
+ .nav-actions{margin-left:auto}
+ .menu-button{display:grid;place-items:center;flex:none;border-radius:9px;line-height:1}
+ .menu-button:hover{background:var(--wash)}
+ .nav-mobile-primary{display:flex!important;justify-content:space-between;margin-top:8px;background:var(--wash)!important;color:var(--plum)}
+}
+@media(max-width:800px){
+ .header{height:72px}
+ .nav-links.open{top:100%;justify-content:flex-start;gap:3px;padding:15px 20px}
+ .nav-actions{gap:8px}
+ .account-popover{right:-50px}
+}
+@media(max-width:640px){
+ .nav-actions .nav-primary{display:none}
+ .nav-login{padding-inline:5px}
+ .lang-trigger-name{display:none}
+ .lang-trigger{min-width:42px;justify-content:center;padding-inline:7px}
+ .lang-trigger-arrow{display:none}
+ .account-menu summary{padding-left:2px}
+}
+@media(max-width:380px){
+ .logo{font-size:23px}
+ .nav{gap:6px}
+ .nav-actions{gap:3px}
+ .menu-button{width:40px}
+}

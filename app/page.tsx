@@ -175,7 +175,40 @@ export default function Home(){
   if(user)setLoadedUserId(user.id);
  }
  async function signOut(){await logout();setView('home');history.replaceState(null,'','#home');setProfile(defaults);setSelected('');setCompared([]);setDone([]);setHasProfile(false)}
- return localize(<><a className="skip-link" href="#main">К содержимому</a><header className="header"><div className="container nav"><button className="logo-button" onClick={()=>go('home')} aria-label="Далее — главная"><Logo/></button><nav className={menu?'nav-links open':'nav-links'} aria-label="Основная навигация">{view==='home'?<><a href="#how" onClick={()=>setMenu(false)}>Как это работает</a><button onClick={()=>go('catalog')}>Каталог программ</button><button onClick={example}>Посмотреть программы</button><a href="#faq" onClick={()=>setMenu(false)}>Вопросы</a></>:<><button className={view==='catalog'?'active':''} onClick={()=>go('catalog')}>Каталог</button><button className={view==='diagnosis'?'active':''} onClick={()=>go(hasProfile?'diagnosis':'profile')}>Диагностика</button><button className={view==='results'?'active':''} onClick={()=>go('results')}>Подбор</button><button className={view==='compare'?'active':''} onClick={()=>go('compare')}>Сравнение{compared.length>0&&<span className="nav-count">{compared.length}</span>}</button><button className={view==='plan'?'active':''} onClick={()=>go('plan')}>Мой план</button></>}</nav><div className="nav-actions"><LanguagePicker/>{user?<button className="text-button" onClick={()=>{void signOut()}}>{user.name||user.email.split('@')[0]} · Выйти</button>:<button className="text-button" onClick={()=>{pendingStart.current=false;setShowLogin(true)}}>Войти</button>}{user&&<button className="text-button desktop" onClick={()=>hasProfile?go(selected?'plan':'results'):begin()}>{hasProfile?'Мой маршрут':'Мой профиль'}</button>}<button className="button small" onClick={begin}>{hasProfile?'Изменить профиль':'Начать'}<Arrow/></button><button className="menu-button" aria-label="Меню" aria-expanded={menu} onClick={()=>setMenu(!menu)}>☰</button></div></div></header>
+ return localize(<><a className="skip-link" href="#main">К содержимому</a><header className="header">
+  <div className="container nav">
+   <button className="logo-button" onClick={()=>go('home')} aria-label="Continue — главная"><Logo/></button>
+   <nav id="site-navigation" className={menu?'nav-links open':'nav-links'} aria-label="Основная навигация">
+    {view==='home'?<>
+     <a href="#how" onClick={()=>setMenu(false)}>Как это работает</a>
+     <button onClick={()=>go('catalog')}>Каталог программ</button>
+     <button onClick={example}>Посмотреть программы</button>
+     <a href="#faq" onClick={()=>setMenu(false)}>Вопросы</a>
+    </>:<>
+     <button className={view==='catalog'?'active':''} onClick={()=>go('catalog')}>Каталог</button>
+     <button className={view==='diagnosis'?'active':''} onClick={()=>go(hasProfile?'diagnosis':'profile')}>Диагностика</button>
+     <button className={view==='results'?'active':''} onClick={()=>go('results')}>Подбор</button>
+     <button className={view==='compare'?'active':''} onClick={()=>go('compare')}>Сравнение{compared.length>0&&<span className="nav-count">{compared.length}</span>}</button>
+     <button className={view==='plan'?'active':''} onClick={()=>go('plan')}>Мой план</button>
+    </>}
+    <button className="nav-mobile-primary" onClick={begin}>{hasProfile?'Изменить анкету':'Начать маршрут'} <Arrow/></button>
+   </nav>
+   <div className="nav-actions">
+    <LanguagePicker/>
+    <button className="button small nav-primary" onClick={begin}>{hasProfile?'Моя анкета':'Начать'}<Arrow/></button>
+    {user?<details className="account-menu">
+     <summary aria-label={`Аккаунт: ${user.email}`} title={user.email}><span className="account-avatar">{(user.name||user.email).charAt(0).toUpperCase()}</span><span className="account-chevron" aria-hidden="true">⌄</span></summary>
+     <div className="account-popover">
+      <p className="account-popover-label">Вы вошли как</p><strong className="account-email">{user.email}</strong>
+      <div className="account-popover-divider"/>
+      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');if(hasProfile)go(selected?'plan':'results');else begin()}}>Мой маршрут <Arrow/></button>
+      <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');void signOut()}}>Выйти</button>
+     </div>
+    </details>:<button className="nav-login" onClick={()=>{pendingStart.current=false;setShowLogin(true)}}>Войти</button>}
+    <button className="menu-button" aria-label={menu?'Закрыть меню':'Открыть меню'} aria-controls="site-navigation" aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?'×':'☰'}</button>
+   </div>
+  </div>
+ </header>
  {showLogin&&<LoginModal onClose={()=>{setShowLogin(false);pendingStart.current=false}} onSuccess={()=>{if(pendingStart.current)setStartAfterLogin(true)}}/>}
  <main id="main" ref={heading} tabIndex={-1}>{notice&&<div className="notice container" role="status">{notice}</div>}
  {user&&!ready?<section className="empty-state container" aria-live="polite"><h1>Загружаем твой профиль…</h1><p>Ответы и прогресс появятся через мгновение.</p></section>:view==='home'?<>
