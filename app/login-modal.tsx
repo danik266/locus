@@ -27,6 +27,7 @@ export function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSucc
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState(0);
+  const [delivery, setDelivery] = useState<'email' | 'console'>('email');
   const overlayRef = useRef<HTMLDivElement>(null);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,8 +59,9 @@ export function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSucc
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json() as { error?: string };
+      const data = await res.json() as { error?: string; delivery?: 'email' | 'console' };
       if (!res.ok) { setError(data.error ?? 'Ошибка отправки'); return; }
+      setDelivery(data.delivery === 'console' ? 'console' : 'email');
       setStep('code');
       setCountdown(60);
     } catch {
@@ -96,8 +98,12 @@ export function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSucc
     subtitle: { ru: 'Введи email — пришлём код подтверждения', en: 'Enter your email — we\'ll send a code', kk: 'Email енгізіңіз — код жібереміз' }[locale] ?? 'Введи email',
     emailLabel: { ru: 'Email', en: 'Email', kk: 'Email' }[locale] ?? 'Email',
     send: { ru: 'Получить код', en: 'Send code', kk: 'Код алу' }[locale] ?? 'Получить код',
-    codeLabel: { ru: 'Код из письма', en: 'Code from email', kk: 'Хаттағы код' }[locale] ?? 'Код',
-    codeHint: { ru: `Отправили на ${email}`, en: `Sent to ${email}`, kk: `${email} адресіне жіберілді` }[locale] ?? `Отправили на ${email}`,
+    codeLabel: delivery === 'console'
+      ? ({ ru: 'Код из терминала', en: 'Code from terminal', kk: 'Терминалдағы код' }[locale] ?? 'Код')
+      : ({ ru: 'Код из письма', en: 'Code from email', kk: 'Хаттағы код' }[locale] ?? 'Код'),
+    codeHint: delivery === 'console'
+      ? ({ ru: 'Почта не настроена. Код напечатан в терминале, где запущен сайт.', en: 'Email is not configured. Find the code in the terminal running the site.', kk: 'Пошта бапталмаған. Код сайт іске қосылған терминалда көрсетілген.' }[locale] ?? 'Код в терминале')
+      : ({ ru: `Отправили на ${email}`, en: `Sent to ${email}`, kk: `${email} адресіне жіберілді` }[locale] ?? `Отправили на ${email}`),
     verify: { ru: 'Войти', en: 'Sign in', kk: 'Кіру' }[locale] ?? 'Войти',
     resend: countdown > 0
       ? ({ ru: `Повторить через ${countdown}с`, en: `Resend in ${countdown}s`, kk: `${countdown}с кейін` }[locale] ?? `${countdown}с`)

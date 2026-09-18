@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     used: false,
     expiresAt: { $gt: new Date() },
     attempts: { $lt: 5 },
-  }, { $inc: { attempts: 1 } }, { sort: { createdAt: -1 }, new: true });
+  }, { $inc: { attempts: 1 } }, { sort: { createdAt: -1 }, returnDocument: 'after' });
 
   if (!otp || otp.code !== createHash('sha256').update(code).digest('hex')) {
     return Response.json({ error: 'Invalid or expired code' }, { status: 401, headers: h });

@@ -8,7 +8,7 @@ function generateOtp(): string {
   return String(randomInt(100000, 1000000));
 }
 
-async function sendEmail(to: string, code: string): Promise<void> {
+async function sendEmail(to: string, code: string): Promise<'email' | 'console'> {
   const resendKey = process.env.RESEND_API_KEY;
   const from = process.env.MAIL_FROM;
 
@@ -31,17 +31,17 @@ async function sendEmail(to: string, code: string): Promise<void> {
       // In development, do not block the user: log code to console
       if (process.env.NODE_ENV !== 'production') {
         console.log(`\n🔑 [DEV FALLBACK] OTP for ${to}: ${code}\n`);
-        return;
+        return 'console';
       }
       throw new Error(`Resend error: ${res.status}`);
     }
-    return;
+    return 'email';
   }
 
   // Fallback: log to console in dev if no email service configured
   if (process.env.NODE_ENV !== 'production') {
     console.log(`\n🔑 OTP for ${to}: ${code}\n`);
-    return;
+    return 'console';
   }
   throw new Error('Email service not configured');
 }
@@ -67,13 +67,13 @@ export async function POST(request: Request) {
   const otp = await Otp.create({ email: email.toLowerCase(), code: createHash('sha256').update(code).digest('hex'), expiresAt });
 
   try {
-    await sendEmail(email.toLowerCase(), code);
+    const delivery = await sendEmail(email.toLowerCase(), code);
     await Otp.updateMany({ email: email.toLowerCase(), _id: { $ne: otp._id }, used: false }, { $set: { used: true } });
+    return Response.json({ ok: true, delivery }, { headers: h });
   } catch (err) {
     await Otp.deleteOne({ _id: otp._id });
     console.error('Email send failed:', err);
     return Response.json({ error: 'Failed to send code' }, { status: 502, headers: h });
   }
 
-  return Response.json({ ok: true }, { headers: h });
 }
