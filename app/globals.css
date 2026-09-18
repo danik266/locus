@@ -242,3 +242,28 @@
  .nav-actions{gap:3px}
  .menu-button{width:40px}
 }
+
+/* Keep the six-step admission form inside narrow phone viewports. */
+@media(max-width:560px){
+ .wizard-page.container{width:calc(100% - 32px);max-width:100%;padding-top:20px}
+ .wizard-shell{grid-template-columns:minmax(0,1fr);width:100%;max-width:100%;gap:18px}
+ .wizard-page .wizard-aside,.wizard-panel,.wizard-content,.wizard-fields,.wizard-fields .field{min-width:0;max-width:100%}
+ .wizard-page .wizard-aside h1,html[lang=en] .wizard-page .wizard-aside h1{font-size:clamp(27px,7.5vw,34px);line-height:1.16;overflow-wrap:normal}
+ .wizard-page .wizard-aside h1 br{display:initial}
+ .wizard-page .wizard-steps{min-width:0;max-width:100%;width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;padding-bottom:8px}
+ .wizard-page .wizard-steps li{flex:none}
+ .wizard-panel{width:100%;padding:21px 18px;border-radius:17px}
+ .wizard-content h2{font-size:clamp(25px,6.3vw,30px);line-height:1.18;overflow-wrap:anywhere}
+ .wizard-fields.two{grid-template-columns:minmax(0,1fr)}
+ .wizard-panel fieldset,.wizard-chips,.wizard-direction-grid{min-width:0;max-width:100%}
+ .wizard-panel .field input:not([type=range]),.wizard-panel .field select{min-width:0;max-width:100%}
+ .wizard-panel .form-footer{min-width:0;gap:10px}
+ .wizard-panel .form-footer .button{min-width:0;max-width:100%;padding-inline:13px}
+}
+@media(max-width:380px){
+ .wizard-page.container{width:calc(100% - 24px)}
+ .wizard-panel{padding:18px 15px}
+ .wizard-panel .form-footer{align-items:stretch;flex-direction:column}
+ .wizard-panel .form-footer .text-button{align-self:flex-start}
+ .wizard-panel .form-footer .button{width:100%}
+}
