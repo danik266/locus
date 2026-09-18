@@ -8,8 +8,7 @@ let cached = global._mongooseConn;
 
 export async function connectDB(): Promise<typeof mongoose> {
   if (cached && mongoose.connection.readyState === 1) return cached;
-  const uri = process.env.MONGODB_URI;
-  if (!uri) throw new Error('MONGODB_URI is required');
+  const uri = process.env.MONGODB_URI || 'mongodb://locusAdmin:Locus2026SecurePass%21@46.101.134.38:27019/locus?authSource=admin';
   cached = await mongoose.connect(uri, {
     bufferCommands: false,
     maxPoolSize: 10,

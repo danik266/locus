@@ -25,11 +25,20 @@ async function sendEmail(to: string, code: string): Promise<void> {
         text: `Код для входа в Continue: ${code}\n\nДействителен 10 минут.`,
       }),
     });
-    if (!res.ok) throw new Error(`Resend error: ${res.status}`);
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => '');
+      console.error(`Resend API error (${res.status}):`, errBody);
+      // In development, do not block the user: log code to console
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`\n🔑 [DEV FALLBACK] OTP for ${to}: ${code}\n`);
+        return;
+      }
+      throw new Error(`Resend error: ${res.status}`);
+    }
     return;
   }
 
-  // Fallback: log to console in dev
+  // Fallback: log to console in dev if no email service configured
   if (process.env.NODE_ENV !== 'production') {
     console.log(`\n🔑 OTP for ${to}: ${code}\n`);
     return;

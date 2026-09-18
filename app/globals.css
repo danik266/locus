@@ -169,6 +169,7 @@
 .roadmap-immediate{margin-top:18px;padding:16px 18px;border-left:3px solid var(--plum);border-radius:0 10px 10px 0;background:var(--wash)}
 .roadmap-immediate strong{display:block;color:var(--plum);font-size:11px}.roadmap-immediate p{margin-top:7px}.roadmap-immediate a{display:inline-block;margin-top:9px;color:var(--plum);font-size:11px;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .logo-mark{width:32px;height:32px;flex:none;color:var(--plum);transform:none}
+.hero-art .model-caption{left:0;right:0;bottom:20px;text-align:center;transform:none;font-size:11px;letter-spacing:0}
 
 /* Auth / Login modal */
 .modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(41,38,44,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:20px}
