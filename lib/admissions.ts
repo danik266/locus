@@ -1,38 +1,73 @@
-export type Profile = { name: string; grade: string; interest: string; country: string; budget: number; english: string; year: string; grades: string };
-export type Program = { id: string; title: string; school: string; country: string; interest: string; tuition: number; english: number; duration: number; accent: string };
-export const defaults: Profile = { name: '', grade: '11 класс', interest: 'Технологии', country: 'Любая', budget: 12000, english: '6', year: '2027', grades: '4–5' };
-export const programs: Program[] = [
- { id: 'cs-de', title: 'Компьютерные науки', school: 'North Campus · демопрограмма', country: 'Германия', interest: 'Технологии', tuition: 3500, english: 6.5, duration: 3, accent: 'plum' },
- { id: 'it-pl', title: 'Разработка цифровых продуктов', school: 'City Institute · демопрограмма', country: 'Польша', interest: 'Технологии', tuition: 4500, english: 6, duration: 3, accent: 'sand' },
- { id: 'ai-nl', title: 'Данные и искусственный интеллект', school: 'West Academy · демопрограмма', country: 'Нидерланды', interest: 'Технологии', tuition: 14000, english: 6.5, duration: 4, accent: 'sage' },
- { id: 'ux-nl', title: 'Дизайн цифрового опыта', school: 'West Academy · демопрограмма', country: 'Нидерланды', interest: 'Дизайн', tuition: 11000, english: 6, duration: 3, accent: 'sand' },
- { id: 'design-pl', title: 'Коммуникационный дизайн', school: 'City Institute · демопрограмма', country: 'Польша', interest: 'Дизайн', tuition: 5000, english: 5.5, duration: 3, accent: 'plum' },
- { id: 'design-de', title: 'Промышленный дизайн', school: 'North Campus · демопрограмма', country: 'Германия', interest: 'Дизайн', tuition: 6000, english: 6, duration: 3, accent: 'sage' },
- { id: 'biz-de', title: 'Бизнес и аналитика', school: 'North Campus · демопрограмма', country: 'Германия', interest: 'Бизнес', tuition: 7000, english: 6.5, duration: 3, accent: 'sage' },
- { id: 'biz-pl', title: 'Международный менеджмент', school: 'City Institute · демопрограмма', country: 'Польша', interest: 'Бизнес', tuition: 4000, english: 6, duration: 3, accent: 'sand' },
- { id: 'biz-nl', title: 'Предпринимательство', school: 'West Academy · демопрограмма', country: 'Нидерланды', interest: 'Бизнес', tuition: 13000, english: 6.5, duration: 4, accent: 'plum' },
-];
-export function recommend(profile: Profile) {
- return programs.filter(p => p.interest === profile.interest).map(p => {
-  const reasons: string[] = [`Направление совпадает с интересом «${profile.interest.toLowerCase()}»`];
-  const gaps: string[] = [];
-  if(p.tuition <= profile.budget) reasons.push('Стоимость обучения укладывается в бюджет'); else gaps.push(`Бюджет ниже стоимости на ${formatMoney(p.tuition-profile.budget)} в год`);
-  if(profile.country === 'Любая' || profile.country === p.country) reasons.push(profile.country === 'Любая' ? 'Страна открыта для рассмотрения' : 'Находится в выбранной стране'); else gaps.push(`Другая страна: ${p.country}`);
-  if(Number(profile.english) >= p.english) reasons.push('Указанный уровень английского соответствует демотребованию'); else gaps.push(`Понадобится подготовка к IELTS ${p.english}`);
-  return { ...p, reasons, gaps, score: (p.tuition <= profile.budget ? 4 : -4) + (profile.country === p.country ? 6 : profile.country === 'Любая' ? 1 : -3) + (Number(profile.english) >= p.english ? 2 : 0) };
- }).sort((a,b)=>b.score-a.score || a.tuition-b.tuition);
+import { annualRangeEur, approximateEur, fx, programs, tuitionPerYear, type Currency, type Program } from './program-catalog.ts';
+export { programs, type Program } from './program-catalog.ts';
+
+export type Profile = { name:string;age:number;grade:string;residence:string;citizenship:string;schoolQualification:string;interest:string;customInterest:string;alternatives:string[];country:string;countries:string[];budget:number;aid:string;priorities:Record<string,number>;english:string;englishExam:string;englishLevel:string;toefl:number;sat:number;satWilling:string;year:string;grades:string;gpa:number;gpaScale:number;subjects:string[];readiness:string };
+export const directions = ['Технологии','Дизайн','Бизнес','Инженерия','Медицина и здоровье','Право','Архитектура','Психология','Естественные науки','Гуманитарные науки','Социальные науки','Искусство и медиа','Образование','Экология','Международные отношения'] as const;
+export const focusName=(profile:Profile)=>profile.interest==='Другое'?profile.customInterest.trim():profile.interest;
+export const defaults:Profile={name:'',age:17,grade:'11 класс',residence:'Казахстан',citizenship:'Казахстан',schoolQualification:'Обычный аттестат',interest:'Технологии',customInterest:'',alternatives:[],country:'Любая',countries:[],budget:12000,aid:'Желательно',priorities:{scholarship:2,ranking:1,cost:2,location:1,career:1},english:'0',englishExam:'Не сдавал',englishLevel:'Не знаю',toefl:0,sat:0,satWilling:'Не знаю',year:'2027',grades:'4–5',gpa:4.5,gpaScale:5,subjects:[],readiness:'Изучаю варианты'};
+export const formatMoney=(value:number)=>new Intl.NumberFormat('ru-RU').format(value)+' €';
+const symbols:Record<Currency,string>={EUR:'€',USD:'$',PLN:'PLN',KRW:'₩',KZT:'₸'};
+export function formatTuition(program:Program):string{
+ const t=program.tuition;if(!t)return 'Не опубликована';
+ if(t.annualRange){const f=(n:number)=>new Intl.NumberFormat('ru-RU').format(n);return `≈${f(t.annualRange.min)}–${f(t.annualRange.max)} ${symbols[t.currency]} / год (${t.annualRange.credits} ECTS)`;}
+ const annual=tuitionPerYear(program);
+ if(!annual)return `${new Intl.NumberFormat('ru-RU').format(t.amount)} ${symbols[t.currency]} / ${t.period==='month'?'месяц':'кредит'}`;
+ return `${new Intl.NumberFormat('ru-RU').format(annual.amount)} ${symbols[annual.currency]} / год`;
 }
-export const formatMoney = (value: number) => new Intl.NumberFormat('ru-RU').format(value) + ' €';
-export function makeTasks(profile: Profile, program: Program) {
- const tasks = [
-  { id: 'verify-'+program.id, title: 'Проверить программу и требования', detail: 'Найди реальную программу на официальном сайте вуза. Уточни стоимость, язык, требования к аттестату и дату подачи: здесь показан демонстрационный вариант.', when: 'Первый шаг', category: 'Выбор' },
+export function budgetComparison(profile:Profile,program:Program):'within'|'above'|'unknown'{
+ if(profile.citizenship!=='Казахстан')return 'unknown';
+ const range=annualRangeEur(program);
+ if(range)return profile.budget>=range.max?'within':profile.budget<range.min?'above':'unknown';
+ const eur=approximateEur(program);return eur===null?'unknown':eur<=profile.budget?'within':'above';
+}
+function interestsFor(profile:Profile):string[]{
+ const focus=focusName(profile).toLocaleLowerCase('ru');
+ if(['Технологии','Дизайн','Бизнес'].includes(profile.interest))return [profile.interest];
+ if(profile.interest==='Искусство и медиа')return ['Дизайн'];
+ if(profile.interest==='Инженерия')return ['Технологии','Дизайн'];
+ if(/компьют|программ|информат|данн|ai|искусственн|робот|кибер|разработ|computer science|software engineering|\bit\b/i.test(focus))return ['Технологии'];
+ if(/бизнес|эконом|финанс|менедж|маркет|предприним/i.test(focus))return ['Бизнес'];
+ if(/дизайн|медиа|график|анимац|ux|ui|коммуникац/i.test(focus))return ['Дизайн'];
+ return [];
+}
+export function recommend(profile:Profile){
+ const focus=focusName(profile);if(!focus)return [];
+ const categories=interestsFor(profile);
+ const destinations=profile.countries?.length?profile.countries:profile.country==='Любая'?[]:[profile.country];
+ return programs.filter(p=>categories.includes(p.interest)&&(!destinations.length||destinations.includes(p.country))).map(p=>{
+  const reasons:string[]=[`Реальная программа по направлению «${p.interest.toLowerCase()}»`],gaps:string[]=[];
+  const cost=budgetComparison(profile,p);
+  if(cost==='within')reasons.push('Ориентир по tuition укладывается в бюджет');
+  else if(cost==='above')gaps.push(p.tuition?.annualRange?`Даже нижняя граница стоимости выше бюджета: ${formatTuition(p)}`:`Tuition выше бюджета: около ${formatMoney(approximateEur(p)!)} в год по курсу ${fx.date}`);
+  else gaps.push(profile.citizenship!=='Казахстан'?'Тариф нужно проверить для твоего гражданства':p.tuition?.annualRange?`Бюджет попадает в диапазон ${formatTuition(p)}; итог зависит от предметов`:'Годовая стоимость пока не подтверждена');
+  if(destinations.length)reasons.push('В выбранной стране');
+  const diplomaGap=p.country==='Нидерланды'&&profile.citizenship==='Казахстан'&&profile.schoolQualification==='Обычный аттестат';
+  if(diplomaGap)gaps.push('Обычный аттестат Казахстана не даёт прямого поступления в Twente');
+  if(profile.englishExam==='Не сдавал')gaps.push(profile.englishLevel!=='Не знаю'?`Английский ${profile.englishLevel} — самооценка; нужен официальный документ`:'Английский нужно подтвердить');
+  else if(profile.englishExam==='IELTS'&&p.english.ielts!==null){
+   if(Number(profile.english)<p.english.ielts)gaps.push(`Общий IELTS ниже порога ${p.english.ielts}`);
+   else reasons.push('Общий IELTS достигает опубликованного порога; проверь секции');
+  }else gaps.push('Способ подтверждения английского нужно сверить');
+  if(p.specialRequirement)gaps.push(p.specialRequirement);
+  const score=(cost==='within'?3:cost==='above'?-3:0)*(1+(profile.priorities.cost??1))+(profile.englishExam==='IELTS'&&p.english.ielts!==null?(Number(profile.english)>=p.english.ielts?2:-2):0)-(diplomaGap?8:0)+(p.tuition?.year.startsWith(profile.year)?2:0);
+  return {...p,reasons,gaps,score};
+ }).sort((a,b)=>b.score-a.score||(approximateEur(a)??Infinity)-(approximateEur(b)??Infinity));
+}
+export function makeTasks(profile:Profile,program:Program){
+ const tasks:{id:string;title:string;detail:string;when:string;category:string}[]=[
+  {id:'verify-'+program.id,title:'Проверить условия программы',detail:`Открой официальную страницу ${program.school}. Сверь требования для своего гражданства, диплома и года поступления.`,when:'Первый шаг',category:'Выбор'}
  ];
- if(program.tuition > profile.budget) tasks.push({id:'fund-'+program.id,title:'Составить план финансирования',detail:`Разница с твоим бюджетом — ${formatMoney(program.tuition-profile.budget)} в год. Изучи стипендии и отдельно оцени проживание.`,when:'До выбора программы',category:'Финансы'});
- if(Number(profile.english) < program.english) tasks.push({id:'english-'+program.english,title:`Подготовиться к IELTS ${program.english}`,detail:`Текущий ориентир: ${profile.english === '0' ? 'уровень не определён' : profile.english}. Пройди пробный тест и составь график занятий. Требование в демокаталоге нужно подтвердить.`,when:'Начать заранее',category:'Экзамены'});
- tasks.push(
-  {id:'docs-'+program.id,title:'Собрать документы',detail:'Составь список: аттестат и оценки, переводы, документ личности. Дополнительные документы уточни у выбранного вуза.',when:`До подачи в ${profile.year}`,category:'Документы'},
-  {id:'portfolio-'+profile.interest,title:profile.interest==='Дизайн'?'Подготовить портфолио':'Подготовить проект и мотивацию',detail:profile.interest==='Дизайн'?'Выбери 3–5 работ и опиши процесс. Формат портфолио проверь на странице реальной программы.':`Опиши свой интерес к направлению «${profile.interest}» и один самостоятельный проект. Уточни, требуется ли мотивационное письмо.`,when:'Параллельно с подготовкой',category:'Развитие'},
-  {id:'apply-'+program.id+'-'+profile.year,title:'Проверить сроки и отправить заявку',detail:'Запиши официальный дедлайн выбранной программы, проверь комплектность документов и сохрани подтверждение подачи. Сервис не отправляет заявки за тебя.',when:`Набор ${profile.year} · срок уточняется`,category:'Поступление'}
- );
+ const cost=budgetComparison(profile,program);
+ if(cost==='above')tasks.push({id:'fund-'+program.id,title:'Составить план финансирования',detail:`Tuition: ${formatTuition(program)} (${program.tuition?.year}). ${program.tuition?.annualRange?'Даже нижняя граница выше твоего бюджета.':`Ориентир по курсу ${fx.date}: ≈${formatMoney(approximateEur(program)!)} в год.`} Добавь сборы и проживание.`,when:'До выбора программы',category:'Финансы'});
+ else if(cost==='unknown')tasks.push({id:'cost-'+program.id,title:'Уточнить полную стоимость',detail:`Текущий тариф: ${formatTuition(program)}. Найди годовую цену, сборы и расходы на проживание.`,when:'До выбора программы',category:'Финансы'});
+ if(profile.englishExam==='Не сдавал')tasks.push({id:'english-'+program.id,title:'Подтвердить английский',detail:`Твоя самооценка: ${profile.englishLevel}. ${program.english.detail}`,when:'Начать заранее',category:'Экзамены'});
+ else if(profile.englishExam==='IELTS'&&program.english.ielts!==null&&Number(profile.english)<program.english.ielts)tasks.push({id:'english-'+program.id,title:'Подготовиться к IELTS',detail:program.english.detail,when:'До подачи',category:'Экзамены'});
+ else tasks.push({id:'language-'+program.id,title:'Сверить языковые требования',detail:program.english.detail,when:'До подачи',category:'Экзамены'});
+ if(program.country==='Нидерланды'&&profile.citizenship==='Казахстан'&&profile.schoolQualification==='Обычный аттестат')tasks.push({id:'diploma-'+program.id,title:'Проверить признание диплома',detail:program.admissionNote,when:'Как можно раньше',category:'Документы'});
+ if(program.specialRequirement)tasks.push({id:'extra-'+program.id,title:'Подготовить дополнительное требование',detail:program.specialRequirement,when:'До подачи',category:'Экзамены'});
+ if(profile.aid!=='Нет')tasks.push({id:'aid-'+program.id,title:'Проверить финансирование',detail:program.scholarshipNote,when:'До подачи',category:'Финансы'});
+ tasks.push({id:'docs-'+program.id,title:'Собрать документы',detail:'Подготовь оценки, аттестат или прогноз оценок, переводы и документ личности. Полный список сверяй с правилами приёма.',when:`До подачи в ${profile.year}`,category:'Документы'});
+ const when=program.deadline?.intake===profile.year?new Date(`${program.deadline.date}T12:00:00Z`).toLocaleDateString('ru-RU'):'срок не подтверждён';
+ tasks.push({id:`apply-${program.id}-${profile.year}`,title:'Подать заявку',detail:`Проверь официальный источник: ${program.admissionUrl}. Срок для набора ${profile.year}: ${when}. Сохрани подтверждение подачи.`,when:`Набор ${profile.year} · ${when}`,category:'Поступление'});
  return tasks;
 }

@@ -4,7 +4,7 @@ import { localizeContent } from '../lib/localize-react';
 import { descriptions, isLocale, languageNames, locales, pageTitles, translateText, type Locale } from '../lib/i18n';
 
 type LanguageContext = { locale: Locale; changeLanguage: (locale: Locale) => void };
-const Language = createContext<LanguageContext>({locale:'en',changeLanguage:()=>{}});
+const Language = createContext<LanguageContext>({locale:'ru',changeLanguage:()=>{}});
 export function LanguageProvider({initialLocale,children}:{initialLocale:Locale;children:ReactNode}) {
  const [locale,setLocale]=useState(initialLocale);
  function changeLanguage(next:Locale){setLocale(next);document.cookie=`continue_locale=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;}

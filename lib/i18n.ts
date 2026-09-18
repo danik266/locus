@@ -3,11 +3,17 @@ export const locales = ['en', 'ru', 'kk'] as const;
 export type Locale = typeof locales[number];
 export const languageNames: Record<Locale, string> = { en: 'English', ru: 'Русский', kk: 'Қазақша' };
 export function isLocale(value: unknown): value is Locale { return typeof value === 'string' && locales.includes(value as Locale); }
-export function localeFromCookie(value: string | undefined): Locale { return isLocale(value) ? value : 'en'; }
+export function localeFromCookie(value: string | undefined): Locale { return isLocale(value) ? value : 'ru'; }
 export function money(value: number, locale: Locale) { return new Intl.NumberFormat(locale === 'kk' ? 'kk-KZ' : locale === 'ru' ? 'ru-RU' : 'en-GB', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value); }
 export const pageTitles: Record<Locale, string> = { en: 'Continue — your path to university', ru: 'Continue — твой маршрут поступления', kk: 'Continue — университетке апарар жолың' };
 export const descriptions: Record<Locale, string> = { en: 'Find programs, compare your options and take the next step with a personal admission plan.', ru: 'Подбери программы, сравни варианты и сделай следующий шаг с личным планом поступления.', kk: 'Бағдарламаларды тауып, нұсқаларды салыстыр және жеке жоспарыңмен келесі қадамды жаса.' };
 const dynamic: { re: RegExp; en: string; kk: string; raw?: number[] }[] = [
+ {re:/^Английский (A1|A2|B1|B2|C1|C2) — самооценка; нужен официальный экзамен$/,en:'English {0} is self-assessed; an official exam is needed',kk:'Ағылшын тілі {0} — өзіндік бағалау; ресми емтихан қажет',raw:[0]},
+ {re:/^Твоя самооценка английского: (Не знаю|A1|A2|B1|B2|C1|C2)\. Пройди пробный тест, составь план подготовки и проверь требование на сайте вуза\.$/,en:'Your self-assessed English level: {0}. Take a practice test, make a study plan and check the university requirement.',kk:'Ағылшын деңгейіңді өзің {0} деп бағаладың. Сынақ тестін тапсырып, дайындық жоспарын құр және университет талабын тексер.'},
+ {re:/^Твой английский: (A1|A2|B1|B2|C1|C2) \(самооценка\)\. Подтверди его экзаменом\.$/,en:'Your English: {0} (self-assessed). Confirm it with an exam.',kk:'Ағылшын деңгейің: {0} (өзіндік бағалау). Оны емтиханмен раста.',raw:[0]},
+ {re:/^IELTS ([\d.]+) · экзамен не сдан$/,en:'IELTS {0} · exam not taken',kk:'IELTS {0} · емтихан тапсырылмаған',raw:[0]},
+ {re:/^IELTS ([\d.]+) · проверить TOEFL$/,en:'IELTS {0} · check TOEFL',kk:'IELTS {0} · TOEFL талабын тексер',raw:[0]},
+ {re:/^(.+) · (академический трек|прикладной трек|международный трек)$/,en:'{0} · {1}',kk:'{0} · {1}'},
  {re:/^(.+), вот$/,en:'{0}, here’s',kk:'{0}, міне,',raw:[0]},
  {re:/^Убрать (.+) из сравнения$/,en:'Remove {0} from comparison',kk:'{0} бағдарламасын салыстырудан алып тастау'},
  {re:/^Выше на (.+)$/,en:'Over by {0}',kk:'{0} артық'},
@@ -34,7 +40,7 @@ export function translateText(source: string, locale: Locale): string {
  if(locale === 'ru') return source.replace(key, normalized);
  const direct = messages[key];
  if(direct) return source.replace(key,direct[locale==='en'?0:1]);
- if(['технологии','дизайн','бизнес'].includes(key)) return translateText(key[0].toUpperCase()+key.slice(1),locale).toLowerCase();
+ if(key === key.toLowerCase() && messages[key[0].toUpperCase()+key.slice(1)]) return translateText(key[0].toUpperCase()+key.slice(1),locale).toLowerCase();
  for(const template of dynamic){
   const match=template.re.exec(key);
   if(!match) continue;
