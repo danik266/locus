@@ -4,7 +4,7 @@ module.exports = {
   apps: [
     {
       name: 'continue',
-      script: '.next/standalone/server.js',
+      script: 'server.js',
       cwd: '/var/www/continue',
       instances: 1,
       exec_mode: 'fork',
@@ -13,7 +13,7 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3001,
         HOSTNAME: '127.0.0.1',
-        MONGODB_URI: 'mongodb://127.0.0.1:27017/locus',
+        MONGODB_URI: process.env.MONGODB_URI || 'mongodb://locusAdmin:Locus2026SecurePass%21@127.0.0.1:27019/locus?authSource=admin',
         SESSION_SECRET: process.env.SESSION_SECRET,
         RESEND_API_KEY: process.env.RESEND_API_KEY,
         MAIL_FROM: process.env.MAIL_FROM,

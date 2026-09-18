@@ -12,7 +12,8 @@
     "start": "node .next/standalone/server.js",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:seed": "node --experimental-strip-types scripts/seed-programs.ts"
+    "db:seed": "node --experimental-strip-types scripts/seed-programs.ts",
+    "deploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "mongoose": "^9.10.1",
