@@ -6,15 +6,18 @@
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
-    "build": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext build",
-    "start": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext start",
+    "dev": "node node_modules/next/dist/bin/next dev --webpack",
+    "dev:cf": "WRANGLER_LOG_PATH=.wrangler/wrangler.log vinext dev",
+    "build": "next build --webpack",
+    "start": "node .next/standalone/server.js",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "db:seed": "node --experimental-strip-types scripts/seed-programs.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
+    "mongoose": "^9.10.1",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"

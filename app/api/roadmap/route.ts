@@ -1,8 +1,8 @@
 import { recommend } from '../../../lib/admissions';
 import { buildRoadmap, parseAiRoadmap, roadmapInput } from '../../../lib/roadmap';
-import { parseProfile } from '../diagnosis/route';
+import { parseProfile } from '../../../lib/diagnosis';
+import { loadActivePrograms } from '../../../lib/catalog-service';
 
-export const runtime='edge';
 const headers={'Cache-Control':'no-store'};
 
 export async function POST(request:Request){
@@ -14,7 +14,7 @@ export async function POST(request:Request){
  const profile=parseProfile(payload.profile);
  const programId=payload.programId;
  if(!profile||typeof programId!=='string'||programId.length>80)return Response.json({error:'Invalid request'},{status:400,headers});
- const program=recommend(profile).find(p=>p.id===programId);
+ const program=recommend(profile,await loadActivePrograms()).find(p=>p.id===programId);
  if(!program)return Response.json({error:'Unknown program'},{status:400,headers});
  const locale=['ru','en','kk'].includes(payload.locale as string)?payload.locale:'ru';
  const key=process.env.GROQ_API_KEY;

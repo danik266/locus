@@ -34,6 +34,9 @@ test('tuition converts the published billing period and unknown amounts remain u
  assert.equal(budgetComparison({...defaults,budget:5000},sdu),'within');
  assert.equal(budgetComparison(defaults,programs.find(p=>p.id==='kimep-management')!),'unknown');
  assert.equal(budgetComparison({...defaults,citizenship:'Другое'},programs[0]),'unknown');
+ const gbpProgram={...programs[0],tuition:{amount:15000,currency:'GBP' as const,period:'year' as const,year:'2026',source:'https://example.org'}};
+ assert.match(formatTuition(gbpProgram),/£ \/ год$/);
+ assert.equal(budgetComparison(defaults,gbpProgram),'unknown');
 });
 
 test('roadmap uses real requirements and marks unconfirmed deadlines',()=>{
@@ -47,4 +50,12 @@ test('roadmap uses real requirements and marks unconfirmed deadlines',()=>{
  const pavia=programs.find(p=>p.id==='pavia-ai')!;
  assert.match(makeTasks(defaults,pavia).at(-1)!.detail,/срок не подтверждён/);
  assert.notEqual(makeTasks(defaults,pavia).at(-1)!.id,makeTasks({...defaults,year:'2028'},pavia).at(-1)!.id);
+});
+
+test('Twente diploma limitation is not attributed to other Dutch universities',()=>{
+ const dutchProgram={...programs.find(p=>p.id==='twente-tcs')!,id:'other-dutch',school:'Other Dutch University'};
+ const result=recommend(defaults,[dutchProgram]);
+ assert.ok(result.length===1);
+ assert.ok(!result[0].gaps.some(gap=>gap.includes('Twente')));
+ assert.ok(!makeTasks(defaults,dutchProgram).some(task=>task.id==='diploma-other-dutch'));
 });

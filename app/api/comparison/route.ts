@@ -1,8 +1,8 @@
 import { recommend } from '../../../lib/admissions';
 import { comparisonFacts, comparisonWinner, parseComparisonNarrative } from '../../../lib/comparison-analysis';
-import { parseProfile } from '../diagnosis/route';
+import { parseProfile } from '../../../lib/diagnosis';
+import { loadActivePrograms } from '../../../lib/catalog-service';
 
-export const runtime = 'edge';
 const headers = {'Cache-Control':'no-store'};
 
 export async function POST(request: Request) {
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
  const profile=parseProfile(payload.profile);
  const ids=payload.ids;
  if(!profile||!Array.isArray(ids)||ids.length<2||ids.length>3||new Set(ids).size!==ids.length||!ids.every(id=>typeof id==='string'&&id.length<80))return Response.json({error:'Invalid comparison'},{status:400,headers});
- const candidates=recommend(profile);
+ const candidates=recommend(profile,await loadActivePrograms());
  const items=ids.map(id=>candidates.find(p=>p.id===id));
  if(items.some(item=>!item))return Response.json({error:'Unknown program'},{status:400,headers});
  const facts=comparisonFacts(profile,items as typeof candidates);

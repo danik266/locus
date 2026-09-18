@@ -1,9 +1,9 @@
 /** Official-source catalogue. Prices are for a Kazakhstan passport unless a row says otherwise. */
-export type Currency = 'EUR' | 'USD' | 'PLN' | 'KRW' | 'KZT';
+export type Currency = 'EUR' | 'USD' | 'PLN' | 'KRW' | 'KZT' | 'GBP' | 'CAD' | 'AUD' | 'JPY' | 'SGD';
 export type Tuition = { amount: number; currency: Currency; period: 'year' | 'semester' | 'month' | 'credit'; year: string; source: string; note?: string; annualRange?: { min: number; max: number; credits: number } };
 export type Deadline = { date: string; label: string; intake: string; source: string };
 export type Program = {
- id: string; title: string; school: string; country: string; interest: string; duration: string; accent: 'plum'|'sand'|'sage'; coverImage?: string;
+ id: string; title: string; school: string; country: string; interest: string; duration: string; accent: 'plum'|'sand'|'sage'; coverImage?: string; verified?: boolean;
  programUrl: string; admissionUrl: string; costUrl?: string; checkedOn: string;
  tuition: Tuition | null; english: { ielts: number | null; detail: string; source: string };
  deadline: Deadline | null; admissionNote: string; scholarshipNote: string; specialRequirement?: string;
@@ -51,12 +51,14 @@ export function tuitionPerYear(program:Program): {amount:number;currency:Currenc
 }
 export function approximateEur(program:Program):number|null {
  const annual=tuitionPerYear(program);if(!annual)return null;
- const ratio:Record<Currency,number>={EUR:1,USD:fx.kztPerUsd/fx.kztPerEur,PLN:fx.kztPerPln/fx.kztPerEur,KRW:fx.kztPerKrw/fx.kztPerEur,KZT:1/fx.kztPerEur};
- return Math.round(annual.amount*ratio[annual.currency]);
+ const ratio:Partial<Record<Currency,number>>={EUR:1,USD:fx.kztPerUsd/fx.kztPerEur,PLN:fx.kztPerPln/fx.kztPerEur,KRW:fx.kztPerKrw/fx.kztPerEur,KZT:1/fx.kztPerEur};
+ const rate=ratio[annual.currency];
+ return rate===undefined?null:Math.round(annual.amount*rate);
 }
 export function annualRangeEur(program:Program):{min:number;max:number}|null {
  const tuition=program.tuition,range=tuition?.annualRange;
  if(!tuition||!range)return null;
- const ratio:Record<Currency,number>={EUR:1,USD:fx.kztPerUsd/fx.kztPerEur,PLN:fx.kztPerPln/fx.kztPerEur,KRW:fx.kztPerKrw/fx.kztPerEur,KZT:1/fx.kztPerEur};
- return {min:Math.round(range.min*ratio[tuition.currency]),max:Math.round(range.max*ratio[tuition.currency])};
+ const ratio:Partial<Record<Currency,number>>={EUR:1,USD:fx.kztPerUsd/fx.kztPerEur,PLN:fx.kztPerPln/fx.kztPerEur,KRW:fx.kztPerKrw/fx.kztPerEur,KZT:1/fx.kztPerEur};
+ const rate=ratio[tuition.currency];
+ return rate===undefined?null:{min:Math.round(range.min*rate),max:Math.round(range.max*rate)};
 }
