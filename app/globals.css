@@ -396,3 +396,8 @@ html,body{max-width:100%;overflow-x:clip}
 @media(max-width:640px){
  .account-popover{position:fixed;top:64px;right:10px;width:min(235px,calc(100vw - 20px))}
 }
+
+.simple-page-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:55vh;gap:16px;text-align:center;padding:40px 20px}
+.simple-spinner{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--plum);border-radius:50%;animation:simple-spin .8s linear infinite}
+.simple-page-loading p{font-size:13px;color:var(--muted);letter-spacing:.02em;margin:0}
+@keyframes simple-spin{to{transform:rotate(360deg)}}

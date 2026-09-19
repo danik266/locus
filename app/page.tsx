@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { LanguagePicker, useLanguage } from './language';
 import { AdmissionWizard } from './admission-wizard';
 import { AdmissionProfile, AnalysisLoading } from './admission-analysis';
@@ -11,6 +11,8 @@ import { useAuth } from './auth-context';
 import { LoginModal } from './login-modal';
 import { CatalogView } from './catalog-view';
 import Image from 'next/image';
+
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 type View = 'home'|'catalog'|'profile'|'analyzing'|'diagnosis'|'results'|'compare'|'plan';
 function Arrow(){return <span aria-hidden="true">↗</span>}
@@ -41,6 +43,14 @@ export default function Home(){
  const restoredUserId=useRef<string|null>(null);
  const pendingStart=useRef(false);
  const heading=useRef<HTMLDivElement>(null);
+
+ useIsomorphicLayoutEffect(()=>{
+  const hash=window.location.hash.slice(1);
+  const validViews: View[]=['home','catalog','profile','analyzing','diagnosis','results','compare','plan'];
+  if(validViews.includes(hash as View)){
+   setView(hash as View);
+  }
+ },[]);
 
  useEffect(()=>{
   if(!menu)return;
@@ -108,12 +118,16 @@ export default function Home(){
      }
      restoredUserId.current=user.id;
      setLoadedUserId(user.id);
-    } catch { if(!cancelled)setNotice('Не удалось загрузить профиль. Попробуй обновить страницу.');return; }
+    } catch {
+     if(!cancelled)setNotice('Не удалось загрузить профиль. Попробуй обновить страницу.');
+    } finally {
+     if(!cancelled)setReady(true);
+    }
    } else {
     restoredUserId.current=null;
     setProfile(defaults);setSelected('');setDone([]);setCompared([]);setHasProfile(false);
+    if(!cancelled)setReady(true);
    }
-   if(!cancelled)setReady(true);
   }
   void restore();
   return()=>{cancelled=true};
@@ -140,7 +154,26 @@ export default function Home(){
    history.pushState(null,'','#profile');
   });
  },[startAfterLogin,ready,user,loadedUserId]);
- useEffect(()=>{if(authLoading)return;const onHash=()=>{const hash=location.hash.slice(1);if(!['home','catalog','profile','analyzing','diagnosis','results','compare','plan'].includes(hash))return;if(!user&&hash!=='home'&&hash!=='catalog'){pendingStart.current=true;setShowLogin(true);setView('home');return;}setView(hash as View)};window.addEventListener('hashchange',onHash);onHash();return()=>window.removeEventListener('hashchange',onHash)},[authLoading,user]);
+ useEffect(()=>{
+  const onHash=()=>{
+   const hash=location.hash.slice(1);
+   if(!['home','catalog','profile','analyzing','diagnosis','results','compare','plan'].includes(hash))return;
+   if(authLoading){
+    setView(hash as View);
+    return;
+   }
+   if(!user&&hash!=='home'&&hash!=='catalog'){
+    pendingStart.current=true;
+    setShowLogin(true);
+    setView('home');
+    return;
+   }
+   setView(hash as View);
+  };
+  window.addEventListener('hashchange',onHash);
+  onHash();
+  return()=>window.removeEventListener('hashchange',onHash);
+ },[authLoading,user]);
  useEffect(()=>{
   if(view!=='analyzing'||!hasProfile)return;
   const controller=new AbortController();
@@ -219,7 +252,7 @@ export default function Home(){
  </header>
  {showLogin&&<LoginModal onClose={()=>{setShowLogin(false);pendingStart.current=false}} onSuccess={()=>{if(pendingStart.current)setStartAfterLogin(true)}}/>}
  <main id="main" ref={heading} tabIndex={-1}>{notice&&<div className="notice container" role="status">{notice}</div>}
- {user&&!ready?<section className="empty-state container" aria-live="polite"><h1>Загружаем твой профиль…</h1><p>Ответы и прогресс появятся через мгновение.</p></section>:view==='home'?<>
+ {view==='home'?<>
  <section className="hero container"><Reveal direction="left" className="hero-copy"><div className="eyebrow"><span className="tiny-line"/> ПОСТУПЛЕНИЕ В ТВОЁМ ТЕМПЕ</div><h1>Куда поступать.<br/><em>С чего начать.</em></h1><p className="lead">Большие планы становятся ближе,<br className="desktop"/> когда понятен следующий шаг.</p><p className="hero-description">Найди программу под свои интересы и собери<br className="desktop"/> маршрут поступления — от выбора до заявки.</p><div className="hero-actions"><button className="button" onClick={begin}>Построить маршрут <Arrow/></button><button className="text-button" onClick={()=>go('catalog')}>Каталог программ <span>↗</span></button></div><div className="hero-footnote"><span className="small-check">✓</span> Вход по email для сохранения <span className="dot"/> Ответы можно изменить</div></Reveal><Reveal direction="right" className="hero-art"><Model/></Reveal></section>
  <div className="container principle-strip"><span>Твои интересы</span><i/><span>Твои возможности</span><i/><span>Твой следующий шаг</span><span className="strip-end">Всё складывается в маршрут <span>↘</span></span></div>
  <section className="campus-gallery container" aria-label="Университеты каталога"><div className="campus-gallery-heading"><span className="eyebrow">УНИВЕРСИТЕТЫ В КАТАЛОГЕ</span><h2>Представь, куда приведёт твой маршрут.</h2><button className="text-button" onClick={()=>go('catalog')}>Исследовать вузы ↗</button></div><div className="campus-gallery-grid">{[{name:'Nazarbayev University',place:'Астана, Казахстан',photo:'/universities/nu.jpg'},{name:'TU Delft',place:'Делфт, Нидерланды',photo:'/universities/delft.jpg'},{name:'University of Oxford',place:'Оксфорд, Великобритания',photo:'/universities/oxford.jpg'}].map(university=><article key={university.name}><Image src={university.photo} alt={`Кампус ${university.name}`} fill sizes="(max-width: 650px) 100vw, 33vw"/><div><strong>{university.name}</strong><span>{university.place}</span></div></article>)}</div></section>
@@ -227,6 +260,6 @@ export default function Home(){
  <section className="section container plan-section"><Reveal direction="left"><div className="eyebrow">ОТ ЦЕЛИ К ДЕЙСТВИЮ</div><h2>Большой путь.<br/><em>Посильные шаги.</em></h2><p className="section-description">Экзамены, документы и сроки — в одном плане.<br/>Не всё сразу. Только то, что важно сейчас.</p><div className="steps">{[['Расскажи о себе','Интересы, возможности и то, к чему стремишься.'],['Выбери подходящее','Сравни варианты и пойми причины подбора.'],['Двигайся в своём темпе','Начни с одной задачи. Отмечай свой прогресс.']].map(([title,desc],i)=><div className="step-row" key={title}><span>0{i+1}</span><div><h3>{title}</h3><p>{desc}</p></div></div>)}</div></Reveal><Reveal direction="right" className="calendar-art"><Model kind="calendar"/><span className="art-index">02 / СДЕЛАТЬ ПЕРВЫЙ ШАГ</span></Reveal></section>
  <section id="faq" className="section container faq-section"><Reveal><div className="eyebrow">ДАВАЙ РАЗБЕРЁМСЯ</div><h2>Есть вопросы?<br/><em>Это нормально.</em></h2><p className="section-description">Первый шаг не обязан быть очевидным.</p></Reveal><Reveal className="faq-list">{faqs.map(([q,a])=><details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</Reveal></section>
  <section className="container cta-wrap"><Reveal className="cta"><div><span className="eyebrow">НАЧНИ С ТОГО, ЧТО ВАЖНО ТЕБЕ</span><h2>Твой следующий шаг — здесь.</h2><p>Твои цели. Твой темп. Твой план.</p></div><button className="button light" onClick={begin}>Составить мой план <Arrow/></button><span className="cta-decoration" aria-hidden="true">↗</span></Reveal></section>
- </>:view==='catalog'?<CatalogView compared={compared} onPick={pick} onCompare={toggleCompare}/>:view==='profile'?<AdmissionWizard profile={profile} step={step} setStep={setStep} patch={patch} finish={()=>{setHasProfile(true);setAnalysisStage(0);go('analyzing')}} back={()=>go(hasProfile?'diagnosis':'home')}/>:view==='analyzing'&&hasProfile?<AnalysisLoading stage={analysisStage}/>:view==='diagnosis'&&hasProfile?<AdmissionProfile profile={profile} insight={insightLocale===locale?aiInsight:null} onMatches={()=>go('results')} onEdit={begin}/>:!hasProfile?<section className="empty-state container"><div className="eyebrow">НАЧНЁМ СО ЗНАКОМСТВА</div><h1>Маршрут начинается<br/><em>с твоих целей.</em></h1><p>Ответь на несколько вопросов, чтобы увидеть подбор и план.</p><button className="button" onClick={begin}>Заполнить профиль <Arrow/></button></section>:view==='results'?<ProgramMatches profile={profile} ranked={ranked} compared={compared} onEdit={begin} onPick={pick} onCompare={toggleCompare} onComparePage={()=>go('compare')} onExploreAllCountries={()=>{patch('countries',[]);patch('country','Любая')}}/>:view==='compare'?<ProgramComparison profile={profile} items={comparePrograms} onBack={()=>go('results')} onPick={pick} onRemove={toggleCompare}/>:chosen?<AdmissionRoadmap profile={profile} program={chosen} done={done} onToggle={id=>setDone(current=>current.includes(id)?current.filter(x=>x!==id):[...current,id])} onBack={()=>go('results')} onEdit={begin} onClear={clear}/>:<section className="workspace container"><div className="workspace-top"><button className="back-button" onClick={()=>go('results')}>← К программам</button></div><div className="empty-state"><h1>Выбери цель.<br/><em>Соберём маршрут.</em></h1><p>Выбери программу из подбора, чтобы увидеть персональные задачи.</p><button className="button" onClick={()=>go('results')}>К программам <Arrow/></button></div></section>}
+ </>:view==='catalog'?<CatalogView compared={compared} onPick={pick} onCompare={toggleCompare}/>:authLoading||(user&&!ready)?<section className="container simple-page-loading" aria-live="polite"><div className="simple-spinner" aria-hidden="true"/><p>{t('Загрузка...')}</p></section>:view==='profile'?<AdmissionWizard profile={profile} step={step} setStep={setStep} patch={patch} finish={()=>{setHasProfile(true);setAnalysisStage(0);go('analyzing')}} back={()=>go(hasProfile?'diagnosis':'home')}/>:view==='analyzing'&&hasProfile?<AnalysisLoading stage={analysisStage}/>:view==='diagnosis'&&hasProfile?<AdmissionProfile profile={profile} insight={insightLocale===locale?aiInsight:null} onMatches={()=>go('results')} onEdit={begin}/>:!hasProfile?<section className="empty-state container"><div className="eyebrow">НАЧНЁМ СО ЗНАКОМСТВА</div><h1>Маршрут начинается<br/><em>с твоих целей.</em></h1><p>Ответь на несколько вопросов, чтобы увидеть подбор и план.</p><button className="button" onClick={begin}>Заполнить профиль <Arrow/></button></section>:view==='results'?<ProgramMatches profile={profile} ranked={ranked} compared={compared} onEdit={begin} onPick={pick} onCompare={toggleCompare} onComparePage={()=>go('compare')} onExploreAllCountries={()=>{patch('countries',[]);patch('country','Любая')}}/>:view==='compare'?<ProgramComparison profile={profile} items={comparePrograms} onBack={()=>go('results')} onPick={pick} onRemove={toggleCompare}/>:chosen?<AdmissionRoadmap profile={profile} program={chosen} done={done} onToggle={id=>setDone(current=>current.includes(id)?current.filter(x=>x!==id):[...current,id])} onBack={()=>go('results')} onEdit={begin} onClear={clear}/>:<section className="workspace container"><div className="workspace-top"><button className="back-button" onClick={()=>go('results')}>← К программам</button></div><div className="empty-state"><h1>Выбери цель.<br/><em>Соберём маршрут.</em></h1><p>Выбери программу из подбора, чтобы увидеть персональные задачи.</p><button className="button" onClick={()=>go('results')}>К программам <Arrow/></button></div></section>}
  </main><footer className="footer container"><button className="logo-button" onClick={()=>go('home')}><Logo/></button><span>Большие планы. Понятные шаги.</span><button onClick={()=>setPrivacy(!privacy)}>О данных и проекте</button><small>LOCUS · Кейс 02 · Прототип</small></footer>{privacy&&<div className="privacy-panel container" role="region" aria-label="О данных и проекте"><h2>Как сохраняются данные</h2><p>После входа ответы, выбор программы и прогресс сохраняются в вашем аккаунте на сервере. Без входа они доступны только в текущей вкладке. Для AI-диагностики, сравнения и маршрута ответы анкеты могут передаваться Groq. Условия поступления и стоимость проверяйте на сайте университета перед подачей.</p><button className="text-button" onClick={()=>setPrivacy(false)}>Закрыть ×</button></div>}</>);
 }
