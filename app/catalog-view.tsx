@@ -2,6 +2,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { directions } from '../lib/admissions';
+import { useLanguage } from './language';
 
 export type CatalogProgram = {
   id: string;
@@ -62,6 +63,7 @@ export function CatalogView({
   onPick: (id: string) => void;
   onCompare: (id: string) => void;
 }) {
+  const { localize, locale, t } = useLanguage();
   const [programs, setPrograms] = useState<CatalogProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -117,15 +119,21 @@ export function CatalogView({
   function formatMoney(amount: number, currency: string) {
     const symbolMap: Record<string, string> = { EUR: '€', USD: '$', PLN: 'zł', KRW: '₩', KZT: '₸', GBP: '£' };
     const sym = symbolMap[currency] || currency;
-    return `${new Intl.NumberFormat('ru-RU').format(amount)} ${sym}`;
+    return `${new Intl.NumberFormat(locale === 'kk' ? 'kk-KZ' : locale === 'en' ? 'en-GB' : 'ru-RU').format(amount)} ${sym}`;
   }
 
   function renderTuition(p: CatalogProgram) {
-    if (!p.tuition) return 'Стоимость уточняется';
+    if (!p.tuition) return t('Стоимость уточняется');
     if (p.tuition.annualRange) {
-      return `${formatMoney(p.tuition.annualRange.min, p.tuition.currency)} – ${formatMoney(p.tuition.annualRange.max, p.tuition.currency)} / год`;
+      return `${formatMoney(p.tuition.annualRange.min, p.tuition.currency)} – ${formatMoney(p.tuition.annualRange.max, p.tuition.currency)} / ${t('год')}`;
     }
-    return `${formatMoney(p.tuition.amount, p.tuition.currency)} / ${p.tuition.period === 'year' ? 'год' : p.tuition.period === 'semester' ? 'семестр' : 'год'}`;
+    return `${formatMoney(p.tuition.amount, p.tuition.currency)} / ${t(p.tuition.period === 'semester' ? 'семестр' : 'год')}`;
+  }
+
+  function renderDuration(years: number) {
+    if (locale === 'en') return `${years} ${years === 1 ? 'year' : 'years'}`;
+    if (locale === 'kk') return `${years} жыл`;
+    return `${years} ${years === 1 ? 'год' : years > 1 && years < 5 ? 'года' : 'лет'}`;
   }
 
   if (mode === 'universities') {
@@ -134,17 +142,17 @@ export function CatalogView({
       return (selectedCountry === 'Все' || university.country === selectedCountry)
         && (!query || `${university.name} ${university.city} ${university.country}`.toLocaleLowerCase().includes(query));
     });
-    return <div className="container catalog-page university-directory">
+    return localize(<div className="container catalog-page university-directory">
       <div className="eyebrow">УНИВЕРСИТЕТЫ</div><h1>Найди свой университет.</h1>
       <p>Здесь перечислены вузы из нашей базы. Для некоторых программы и условия поступления ещё не добавлены.</p>
       <div className="catalog-mode-switch" role="group" aria-label="Раздел каталога"><button onClick={() => setMode('programs')}>Программы ({programs.length})</button><button className="active" aria-current="page">Университеты ({universities.length})</button></div>
       <div className="university-filters"><label>Поиск<input value={search} onChange={event => setSearch(event.target.value)} placeholder="Название, город или страна"/></label><label>Страна<select value={selectedCountry} onChange={event => setSelectedCountry(event.target.value)}><option value="Все">Все страны</option>{[...new Set(universities.map(university => university.country))].sort().map(country => <option key={country}>{country}</option>)}</select></label></div>
       <p className="university-count">Найдено: {visibleUniversities.length}</p>
       <div className="university-grid">{visibleUniversities.map(university => <article key={university.id} className="university-card"><div className={`catalog-card-visual ${university.photo ? 'with-photo' : ''}`}>{university.photo ? <Image src={university.photo} alt={`Кампус ${university.name}`} fill sizes="(max-width: 650px) 100vw, 33vw"/> : <span aria-hidden="true">{university.name.split(/\s+/).slice(0,2).map(word => word[0]).join('')}</span>}<small>{university.city} · {university.country}</small></div><div className="university-card-body"><h2>{university.name}</h2><p>{university.programCount ? `${university.programCount} программ в каталоге` : 'Программы пока не добавлены'}</p><a href={university.website} target="_blank" rel="noopener noreferrer">Официальный сайт ↗</a></div></article>)}</div>
-    </div>;
+    </div>);
   }
 
-  return (
+  return localize(
     <div className="container catalog-page" style={{ paddingTop: '32px', paddingBottom: '80px' }}>
       {/* Header section */}
       <div className="section-top" style={{ marginBottom: '32px' }}>
@@ -337,7 +345,7 @@ export function CatalogView({
                   </div>
                   <div>
                     <span style={{ color: 'var(--muted)', display: 'block' }}>Язык / Длительность:</span>
-                    <strong>{p.language} · {p.durationYears} {p.durationYears === 1 ? 'год' : p.durationYears < 5 ? 'года' : 'лет'}</strong>
+                    <strong>{p.language} · {renderDuration(p.durationYears)}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--muted)', display: 'block' }}>Английский:</span>
@@ -407,7 +415,7 @@ export function CatalogView({
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', background: 'var(--wash)', padding: '16px', borderRadius: '12px', marginBottom: '20px', fontSize: '12px' }}>
               <div><strong>Степень:</strong> {selectedProgram.degree === 'bachelor' ? 'Бакалавриат' : selectedProgram.degree}</div>
-              <div><strong>Срок:</strong> {selectedProgram.durationYears} года / лет</div>
+              <div><strong>Срок:</strong> {renderDuration(selectedProgram.durationYears)}</div>
               <div><strong>Стоимость:</strong> {renderTuition(selectedProgram)}</div>
               <div><strong>Дедлайн:</strong> {selectedProgram.deadline?.date || 'По набору'}</div>
               <div><strong>IELTS:</strong> {selectedProgram.english.ielts ?? 'Не указан'}</div>

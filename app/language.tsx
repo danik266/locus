@@ -36,7 +36,7 @@ export function LanguagePicker(){
     aria-label={label}
     onClick={()=>setOpen(v=>!v)}
    >
-    <span className="language-symbol" aria-hidden="true">A<span>а</span></span>
+    <span className="language-symbol" aria-hidden="true">A<span>文</span></span>
     <span className="lang-trigger-name">{languageNames[locale]}</span>
     <span className="lang-trigger-arrow" aria-hidden="true">{open?'▲':'▾'}</span>
    </button>

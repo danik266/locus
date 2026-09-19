@@ -8,6 +8,9 @@ export function money(value: number, locale: Locale) { return new Intl.NumberFor
 export const pageTitles: Record<Locale, string> = { en: 'Continue — your path to university', ru: 'Continue — твой маршрут поступления', kk: 'Continue — университетке апарар жолың' };
 export const descriptions: Record<Locale, string> = { en: 'Find programs, compare your options and take the next step with a personal admission plan.', ru: 'Подбери программы, сравни варианты и сделай следующий шаг с личным планом поступления.', kk: 'Бағдарламаларды тауып, нұсқаларды салыстыр және жеке жоспарыңмен келесі қадамды жаса.' };
 const dynamic: { re: RegExp; en: string; kk: string; raw?: number[] }[] = [
+ {re:/^(\d+) программ в каталоге$/,en:'{0} programs in catalog',kk:'Каталогта {0} бағдарлама',raw:[0]},
+ {re:/^Проверено: (.+)\. Перед подачей перепроверь условия\.$/,en:'Verified: {0}. Recheck the requirements before applying.',kk:'Тексерілген: {0}. Өтініш берер алдында талаптарды қайта тексер.',raw:[0]},
+ {re:/^(\d{4}-\d{2}-\d{2}) \((.+)\)$/,en:'{0} ({1})',kk:'{0} ({1})',raw:[0]},
  {re:/^Английский (A1|A2|B1|B2|C1|C2) — самооценка; нужен официальный экзамен$/,en:'English {0} is self-assessed; an official exam is needed',kk:'Ағылшын тілі {0} — өзіндік бағалау; ресми емтихан қажет',raw:[0]},
  {re:/^Твоя самооценка английского: (Не знаю|A1|A2|B1|B2|C1|C2)\. Пройди пробный тест, составь план подготовки и проверь требование на сайте вуза\.$/,en:'Your self-assessed English level: {0}. Take a practice test, make a study plan and check the university requirement.',kk:'Ағылшын деңгейіңді өзің {0} деп бағаладың. Сынақ тестін тапсырып, дайындық жоспарын құр және университет талабын тексер.'},
  {re:/^Твой английский: (A1|A2|B1|B2|C1|C2) \(самооценка\)\. Подтверди его экзаменом\.$/,en:'Your English: {0} (self-assessed). Confirm it with an exam.',kk:'Ағылшын деңгейің: {0} (өзіндік бағалау). Оны емтиханмен раста.',raw:[0]},
