@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { cookies, headers } from 'next/headers';
 import { LanguageProvider } from './language';
 import { AuthProvider } from './auth-context';
 import { descriptions, localeFromCookie, pageTitles } from '../lib/i18n';
 import './globals.css';
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 export async function generateMetadata(): Promise<Metadata> {
  const h = await headers();
  const locale = localeFromCookie((await cookies()).get('continue_locale')?.value);

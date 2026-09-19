@@ -168,7 +168,7 @@ export function CatalogView({
         marginBottom: '32px',
         boxShadow: '0 8px 30px #4e384e08'
       }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+        <div className="catalog-control-grid">
           <div className="field" style={{ margin: 0 }}>
             <span style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '4px' }}>Поиск по названию или вузу</span>
             <input
@@ -281,7 +281,7 @@ export function CatalogView({
         </div>
       )}
 
-      <div className="program-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '20px' }}>
+      <div className="program-grid catalog-program-grid">
         {filtered.map(p => {
           const isCompared = compared.includes(p.id);
           return (

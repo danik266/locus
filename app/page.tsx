@@ -42,6 +42,13 @@ export default function Home(){
  const pendingStart=useRef(false);
  const heading=useRef<HTMLDivElement>(null);
 
+ useEffect(()=>{
+  if(!menu)return;
+  const previousOverflow=document.body.style.overflow;
+  document.body.style.overflow='hidden';
+  return()=>{document.body.style.overflow=previousOverflow};
+ },[menu]);
+
  useEffect(() => {
   async function fetchDbPrograms() {
    try {
@@ -151,6 +158,7 @@ export default function Home(){
  },[view,hasProfile,profile,locale]);
  function go(next:View){if(!user&&next!=='home'&&next!=='catalog'){pendingStart.current=true;setShowLogin(true);return;}setView(next);setMenu(false);history.pushState(null,'','#'+next);window.scrollTo({top:0,behavior:'instant'});requestAnimationFrame(()=>heading.current?.focus())}
  function begin(){
+  setMenu(false);
   if(!user){pendingStart.current=true;setShowLogin(true);return;}
   setStep(0);setAiInsight(null);go('profile');
  }
@@ -205,7 +213,7 @@ export default function Home(){
       <button onClick={e=>{e.currentTarget.closest('details')?.removeAttribute('open');void signOut()}}>{t('Выйти')}</button>
      </div>
     </details>:<button className="nav-login" onClick={()=>{pendingStart.current=false;setShowLogin(true)}}>{t('Войти')}</button>}
-    <button className="menu-button" aria-label={menu?'Закрыть меню':'Открыть меню'} aria-controls="site-navigation" aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?'×':'☰'}</button>
+    <button className={menu?'menu-button is-open':'menu-button'} aria-label={menu?'Закрыть меню':'Открыть меню'} aria-controls="site-navigation" aria-expanded={menu} onClick={()=>setMenu(!menu)}><span/><span/><span/></button>
    </div>
   </div>
  </header>

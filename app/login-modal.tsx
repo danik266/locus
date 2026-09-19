@@ -34,8 +34,13 @@ export function LoginModal({ onClose, onSuccess }: { onClose: () => void; onSucc
   // Close on backdrop click
   useEffect(() => {
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+    };
   }, [onClose]);
 
   // Countdown for resend

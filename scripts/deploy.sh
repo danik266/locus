@@ -8,7 +8,7 @@ echo "🚀 [1/4] Building Next.js standalone..."
 npm run build
 
 echo "📦 [2/4] Syncing build to server ($SERVER:$REMOTE_DIR)..."
-rsync -avz --delete .next/standalone/ "$SERVER:$REMOTE_DIR/"
+rsync -avz --delete --exclude='.env.production' .next/standalone/ "$SERVER:$REMOTE_DIR/"
 rsync -avz .next/static/ "$SERVER:$REMOTE_DIR/.next/static/"
 rsync -avz public/ "$SERVER:$REMOTE_DIR/public/"
 scp ecosystem.config.cjs "$SERVER:$REMOTE_DIR/"
